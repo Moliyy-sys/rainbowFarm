@@ -6,4 +6,24 @@
     <select id="selectRolePermissionIds" resultType="Long">
         SELECT permission_id FROM sys_role_permission WHERE role_id = #{roleId}
     </select>
+
+    <!-- 根据角色ID删除角色权限关联-->
+    <delete id="deleteRolePermissionByRoleIds">
+        DELETE FROM sys_role_permission WHERE role_id IN
+        <foreach collection="roleIds" item="roleId" open="(" separator="," close=")">
+            #{roleId}
+        </foreach>
+    </delete>
+
+    <!-- 根据角色ID删除角色用户关联-->
+    <delete id="deleteUserRolesByRoleIds">
+        DELETE FROM sys_user_role WHERE role_id IN
+        <foreach collection="roleIds" item="roleId" open="(" separator="," close=")">
+            #{roleId}
+        </foreach>
+    </delete>
+
+    <select id="selectRoleUserIds" resultType="Long">
+         SELECT user_id FROM sys_user_role WHERE role_id = #{roleId}
+    </select>
 </mapper>

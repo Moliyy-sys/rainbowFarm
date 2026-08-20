@@ -17,7 +17,9 @@ public enum CodeEnum {
     //业务异常
     TEST_ERROR(601,"测试业务异常"),
 
-    SYS_USER_EXIST(602,"用户名已存在");
+    SYS_USER_EXIST(602,"用户名已存在"),
+
+    SYS_ROLE_EXIST(603,"角色已存在");
     private final Integer code;
     private final String msg;
 }
