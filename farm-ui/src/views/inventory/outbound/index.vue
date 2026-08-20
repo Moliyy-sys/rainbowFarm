@@ -1,0 +1,452 @@
+<template>
+  <div class="outbound-container">
+    
+    <div class="content-area">
+      <el-card>
+        <template #header>
+          <div class="card-header">
+            <span>出库记录列表</span>
+            <el-button type="primary" @click="handleAdd">
+              <el-icon><Plus /></el-icon>
+              新增出库单
+            </el-button>
+          </div>
+        </template>
+        
+        <div class="search-area">
+          <el-form :model="searchForm" inline>
+            <el-form-item label="出库单号">
+              <el-input 
+                v-model="searchForm.shipmentOrderNo" 
+                placeholder="请输入出库单号"
+                clearable
+              />
+            </el-form-item>
+            <el-form-item label="出库状态">
+              <el-select v-model="searchForm.shipmentOrderStatus" placeholder="请选择状态" clearable style="min-width: 160px;">
+                <el-option
+                  v-for="item in statusOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleSearch">查询</el-button>
+              <el-button @click="handleReset">重置</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+        
+        <el-table :data="tableData" v-loading="loading" stripe>
+          <el-table-column prop="id" label="ID" width="80" />
+          <el-table-column prop="shipmentOrderNo" label="出库单号" width="180" />
+          <el-table-column prop="merchantId" label="客户" width="160">
+            <template #default="{ row }">
+              {{ getCustomerName(row) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="totalQuantity" label="总数量" width="100">
+            <template #default="{ row }">
+              <span class="quantity">{{ row.totalQuantity }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="receivableAmount" label="应收金额(元)" width="120">
+            <template #default="{ row }">
+              <span class="price total">¥{{ row.receivableAmount.toFixed(2) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="warehouseId" label="仓库" width="120">
+            <template #default="{ row }">
+              {{ getWarehouseName(row.warehouseId) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="areaId" label="库区" width="120">
+            <template #default="{ row }">
+              {{ getAreaName(row.areaId) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="shipmentOrderStatus" label="状态" width="120">
+            <template #default="{ row }">
+              <el-tag :type="getStatusTagType(row.shipmentOrderStatus)">
+                {{ getStatusText(row.shipmentOrderStatus) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="createTime" label="创建时间" width="180">
+            <template #default="{ row }">
+              <span>{{ formatDateTime(row.createTime) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="320" fixed="right">
+            <template #default="{ row }">
+              <div class="action-buttons">
+                <el-button type="primary" size="small" @click="handleView(row)">
+                  查看
+                </el-button>
+                <el-button
+                  v-if="row.shipmentOrderStatus === 0"
+                  type="warning"
+                  size="small"
+                  @click="handleEdit(row)"
+                >
+                  编辑
+                </el-button>
+                <el-button 
+                  v-if="row.shipmentOrderStatus === 0"
+                  type="success" 
+                  size="small" 
+                  @click="handleConfirm(row)"
+                >
+                  完成出库
+                </el-button>
+                <el-button 
+                  v-if="row.shipmentOrderStatus === 0"
+                  type="danger" 
+                  size="small" 
+                  @click="handleDelete(row)"
+                >
+                  删除
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        
+        <el-pagination
+          v-model:current-page="pagination.current"
+          v-model:page-size="pagination.size"
+          :total="pagination.total"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSearch"
+          @current-change="handleSearch"
+        />
+      </el-card>
+    </div>
+
+    <!-- 新增出库单弹窗 -->
+    <AddShipmentOrderDialog
+      v-model="addDialogVisible"
+      :mode="dialogMode"
+      :order-id="editingOrderId"
+      @success="handleDialogSuccess"
+    />
+
+    <!-- 查看出库单详情弹窗 -->
+    <ViewShipmentOrderDialog
+      v-model="viewDialogVisible"
+      :order-id="currentOrderId"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
+import { 
+  getShipmentOrderListApi, 
+  deleteShipmentOrderApi,
+  completeShipmentApi,
+  getMerchantOptionsApi,
+  getWarehouseOptionsApi,
+  getWarehouseAreaOptionsApi
+} from '@/api/inventory'
+import type { ShipmentOrder } from '@/types/inventory'
+import AddShipmentOrderDialog from './components/AddShipmentOrderDialog.vue'
+import ViewShipmentOrderDialog from './components/ViewShipmentOrderDialog.vue'
+
+// 搜索表单
+const searchForm = reactive({
+  shipmentOrderNo: '',
+  shipmentOrderStatus: undefined as number | undefined
+})
+
+// 出库状态选项
+const statusOptions = [
+  { label: '未出库', value: 0 },
+  { label: '已出库', value: 1 }
+]
+
+// 分页
+const pagination = reactive({
+  current: 1,
+  size: 10,
+  total: 0,
+  pages: 0
+})
+
+// 表格数据
+const tableData = ref<ShipmentOrder[]>([])
+const loading = ref(false)
+
+// 字典数据
+const merchantOptions = ref<Array<{ id: number; merchantName: string }>>([])
+const warehouseOptions = ref<Array<{ id: number; warehouseName: string }>>([])
+const areaOptions = ref<Array<{ id: number; areaName: string; warehouseId: number }>>([])
+const dictLoading = ref(false)
+
+// 加载字典数据
+const loadDictData = async () => {
+  dictLoading.value = true
+  try {
+    const [merchants, warehouses, areas] = await Promise.all([
+      getMerchantOptionsApi(),
+      getWarehouseOptionsApi(),
+      getWarehouseAreaOptionsApi()
+    ])
+    
+    merchantOptions.value = merchants
+    warehouseOptions.value = warehouses
+    areaOptions.value = areas
+  } catch (error) {
+    console.error('加载字典数据失败:', error)
+  } finally {
+    dictLoading.value = false
+  }
+}
+
+
+// 时间格式化
+const formatDateTime = (dateTime: string) => {
+  if (!dateTime) return '-'
+  const date = new Date(dateTime)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+}
+
+// 获取状态标签类型
+const getStatusTagType = (status: number) => {
+  const statusMap: Record<number, 'warning' | 'success' | 'info' | 'danger' | 'primary'> = {
+    0: 'warning',  // 未出库
+    1: 'success'   // 已出库
+  }
+  return statusMap[status] || 'info'
+}
+
+// 获取状态文本
+const getStatusText = (status: number) => {
+  const statusMap: Record<number, string> = {
+    0: '未出库',
+    1: '已出库'
+  }
+  return statusMap[status] || '未知状态'
+}
+
+// 获取客户名称
+const getCustomerName = (order: ShipmentOrder) => {
+  if (order.merchantName) {
+    return order.merchantName
+  }
+  const merchant = merchantOptions.value.find(item => item.id === order.merchantId)
+  return merchant?.merchantName || '-'
+}
+
+const getWarehouseName = (warehouseId: number) => {
+  const warehouse = warehouseOptions.value.find(item => item.id === warehouseId)
+  return warehouse?.warehouseName || `ID:${warehouseId}`
+}
+
+const getAreaName = (areaId: number) => {
+  const area = areaOptions.value.find(item => item.id === areaId)
+  return area?.areaName || `ID:${areaId}`
+}
+
+// 获取数据
+const fetchData = async () => {
+  loading.value = true
+  try {
+    const params = {
+      pageNum: pagination.current,
+      pageSize: pagination.size,
+      ...searchForm
+    }
+    
+    const res = await getShipmentOrderListApi(params)
+    tableData.value = res.records || []
+    pagination.total = res.total || 0
+    pagination.current = res.current || 1
+    pagination.size = res.size || 10
+    pagination.pages = res.pages || 0
+    
+  } catch (error) {
+    console.error('获取出库单列表失败:', error)
+    ElMessage.error('获取数据失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 搜索
+const handleSearch = () => {
+  pagination.current = 1
+  fetchData()
+}
+
+// 重置
+const handleReset = () => {
+  Object.assign(searchForm, {
+    shipmentOrderNo: '',
+    shipmentOrderStatus: undefined
+  })
+  handleSearch()
+}
+
+// 新增出库单弹窗相关
+const addDialogVisible = ref(false)
+const dialogMode = ref<'create' | 'edit'>('create')
+const editingOrderId = ref<number>()
+
+// 查看出库单详情弹窗相关
+const viewDialogVisible = ref(false)
+const currentOrderId = ref<number>()
+
+// 新增
+const handleAdd = () => {
+  dialogMode.value = 'create'
+  editingOrderId.value = undefined
+  addDialogVisible.value = true
+}
+
+// 新增/编辑成功回调
+const handleDialogSuccess = () => {
+  addDialogVisible.value = false
+  fetchData()
+}
+
+// 编辑
+const handleEdit = (row: ShipmentOrder) => {
+  dialogMode.value = 'edit'
+  editingOrderId.value = row.id
+  addDialogVisible.value = true
+}
+
+// 查看
+const handleView = (row: ShipmentOrder) => {
+  currentOrderId.value = row.id
+  viewDialogVisible.value = true
+}
+
+// 确认出库
+const handleConfirm = async (row: ShipmentOrder) => {
+  try {
+    await ElMessageBox.confirm(
+      `确认完成出库单"${row.shipmentOrderNo}"吗？`,
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    await completeShipmentApi(row.id!)
+    ElMessage.success('出库完成')
+    fetchData() // 刷新列表
+    
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('完成出库失败:', error)
+      ElMessage.error('操作失败')
+    }
+  }
+}
+
+// 删除出库单
+const handleDelete = async (row: ShipmentOrder) => {
+  try {
+    await ElMessageBox.confirm(
+      `确认删除出库单"${row.shipmentOrderNo}"吗？`,
+      '警告',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'error'
+      }
+    )
+    
+    await deleteShipmentOrderApi(row.id!)
+    ElMessage.success('删除成功')
+    fetchData() // 刷新列表
+    
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除出库单失败:', error)
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+onMounted(() => {
+  loadDictData()
+  fetchData()
+})
+</script>
+
+<style scoped>
+.outbound-container {
+  padding: 0px;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-header h2 {
+  margin: 0 0 8px 0;
+  color: #303133;
+}
+
+.page-header p {
+  margin: 0;
+  color: #909399;
+  font-size: 14px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-area {
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.quantity {
+  color: #409eff;
+  font-weight: bold;
+}
+
+.price {
+  color: #e6a23c;
+  font-weight: bold;
+}
+
+.price.total {
+  color: #f56c6c;
+  font-size: 14px;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.el-pagination {
+  margin-top: 20px;
+  text-align: right;
+}
+</style>

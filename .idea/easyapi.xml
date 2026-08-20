@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="EasyApiUnifiedProjectSettings">
+    <option name="modules">
+      <map>
+        <entry key="com.itangcent.easyapi.channel.postman.PostmanSettings">
+          <value>
+            <map>
+              <entry key="postmanBuildExample" value="true" />
+              <entry key="postmanExportMode" value="CREATE_NEW" />
+            </map>
+          </value>
+        </entry>
+        <entry key="com.itangcent.easyapi.core.settings.module.EnvironmentSettings">
+          <value>
+            <map>
+              <entry key="disabledAutoRuleFiles" value="[]" />
+              <entry key="projectEnvironments" value="" />
+            </map>
+          </value>
+        </entry>
+        <entry key="com.itangcent.easyapi.core.settings.module.RuleFileSettings">
+          <value>
+            <map>
+              <entry key="projectBuiltInConfigEnabled" value="true" />
+            </map>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
