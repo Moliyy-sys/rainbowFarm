@@ -189,4 +189,25 @@ public class UserService {
         }
         return true;
     }
+
+    /**
+     *根据用户名查询用户
+     * @param userName //用户名
+     * @return //用户详情
+     */
+    public User findByUserName(String userName){
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_name", userName);
+        return userMapper.selectOne(queryWrapper);
+    }
+
+    /**
+     * 根据用户名查询用户所有权限
+     * @param userName //用户名
+     * @return 权限列表
+     */
+    public List<Permission> findAllPermission(String userName){
+        return null;
+    }
+
 }

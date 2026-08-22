@@ -1,6 +1,5 @@
 package org.rainbow.farm_common.result;
 
-import com.sun.net.httpserver.Authenticator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -19,7 +18,9 @@ public enum CodeEnum {
 
     SYS_USER_EXIST(602,"用户名已存在"),
 
-    SYS_ROLE_EXIST(603,"角色已存在");
+    SYS_ROLE_EXIST(603,"角色已存在"),
+
+    SYS_PERMISSION_EXIST(604,"权限已存在");
     private final Integer code;
     private final String msg;
 }

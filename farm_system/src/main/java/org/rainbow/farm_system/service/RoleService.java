@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -122,7 +123,7 @@ public class RoleService {
         //删除用户角色关联
         roleMapper.deleteUserRolesByRoleIds(ids);
         //删除角色
-        return roleMapper.deleteBatchIds(ids) > 0;
+        return roleMapper.deleteByIds(ids) > 0;
     }
 
     /**
@@ -130,7 +131,7 @@ public class RoleService {
      * @return //正常状态的角色列表
      */
     public List<Role> getRoleSelectList(){
-        QueryWrapper<Role> queryWrapper = new QueryWrapper();
+        QueryWrapper<Role> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("status", "0");//0表示正常
         queryWrapper.orderByDesc("role_sort");
         queryWrapper.select("role_id", "role_name");
@@ -209,7 +210,11 @@ public class RoleService {
      * @return //true成功,false失败
      */
     public boolean cancelRoleFromUsers(Long roleId,List<Long> userIds){
-        return false;
+        if (userIds == null || userIds.isEmpty()) {
+            return false;
+        }
+        roleMapper.deleteUserRolesByRoleIdAndUserIds(roleId, userIds);
+        return true;
     }
 
     /**
@@ -219,7 +224,19 @@ public class RoleService {
      * @return //true成功,false失败
      */
     public boolean assignRoleToUsers(Long roleId,List<Long> userIds){
-        return false;
+        if (userIds == null || userIds.isEmpty()) {
+            return false;
+        }
+        for (Long userId : userIds) {
+            // 检查关联是否已存在
+            int count = roleMapper.countUserRoleExists(roleId, userId);
+            if (count == 0) {
+                // 插入用户角色关联
+                roleMapper.insertUserRole(roleId, userId);
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -229,7 +246,13 @@ public class RoleService {
      * @return //true成功,false失败
      */
     public boolean assignPermissions( Long roleId, List<Long> permissionIds){
-        return false;
+        // 先删除角色的所有权限
+        roleMapper.deleteRolePermissionByRoleIds(List.of(roleId));
+        // 如果permissionIds不为空，则插入新的权限关联
+        if (permissionIds != null && !permissionIds.isEmpty()) {
+            roleMapper.insertRolePermissions(roleId, permissionIds);
+        }
+        return true;
     }
 
     /**
@@ -238,6 +261,10 @@ public class RoleService {
      * @return //权限对象列表
      */
     public List<Permission> getRolePermissions(Long roleId){
-        return null;
+        List<Long> permissionIds = roleMapper.selectRolePermissionIds(roleId);
+        if (permissionIds != null && !permissionIds.isEmpty()) {
+            return permissionMapper.selectByIds(permissionIds);
+        }
+        return Arrays.asList();
     }
 }
