@@ -4,8 +4,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.rainbow.farm_common.result.BaseResult;
 import org.rainbow.farm_common.result.CodeEnum;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 
 /**
  * 统一异常处理器
@@ -22,5 +24,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusException.class)
     public BaseResult defaultExceptionHandle(BusException e){
         return BaseResult.error(e.getCodeEnum());
+    }
+
+    //处理权限不足异常,捕捉到异常后再次抛出
+    @ExceptionHandler(AccessDeniedException.class)
+    public void defaultExceptionHandle(AccessDeniedException e) throws AccessDeniedException {
+        throw e;
     }
 }

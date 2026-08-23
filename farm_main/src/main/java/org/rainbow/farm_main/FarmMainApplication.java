@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerIntercept
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 /**
  * 智慧农业管理系统主启动类
@@ -18,6 +19,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @MapperScan(
         basePackages = {"org.rainbow.farm_system.mapper"}
 )
+//启动@PerAuthorize
+@EnableMethodSecurity(prePostEnabled = true)
 public class FarmMainApplication {
 
     static void main(String[] args) {

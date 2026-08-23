@@ -22,4 +22,17 @@
         </foreach>
     </insert>
 
+    <!-- 根据用户名查询权限列表 -->
+    <select id="selectUserPermissions" resultType="org.rainbow.farm_system.entity.Permission" parameterType="string">
+        SELECT DISTINCT
+        sys_permission.*
+        FROM
+        sys_user
+        LEFT JOIN sys_user_role ON sys_user.user_id = sys_user_role.user_id
+        LEFT JOIN sys_role ON sys_user_role.role_id = sys_role.role_id
+        LEFT JOIN sys_role_permission ON sys_role.role_id = sys_role_permission.role_id
+        LEFT JOIN sys_permission ON sys_role_permission.permission_id = sys_permission.permission_id
+        WHERE
+        sys_user.user_name = #{username}
+    </select>
 </mapper>

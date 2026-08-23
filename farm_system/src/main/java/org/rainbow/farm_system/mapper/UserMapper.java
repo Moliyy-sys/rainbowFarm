@@ -2,6 +2,7 @@ package org.rainbow.farm_system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
+import org.rainbow.farm_system.entity.Permission;
 import org.rainbow.farm_system.entity.User;
 
 import java.util.List;
@@ -28,4 +29,10 @@ public interface UserMapper extends BaseMapper<User> {
      * @return //角色id列表
      */
     List<Long> selectUserRoleIds(@Param("userId") Long userId);
+    /**
+     * 根据用户名查询权限列表
+     * @param username 用户名
+     * @return 权限列表
+     */
+    List<Permission> selectUserPermissions(String username);
 }

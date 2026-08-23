@@ -7,6 +7,7 @@ import org.rainbow.farm_system.entity.Role;
 import org.rainbow.farm_system.entity.User;
 import org.rainbow.farm_system.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -28,6 +29,7 @@ public class RoleController {
      * @return 角色分页数据
      */
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('/role/list')")
     public BaseResult<IPage<Role>> getRoleList(
             @RequestParam(value = "pageNum",defaultValue = "1") int pageNum,
             @RequestParam(value = "pageSize",defaultValue = "10") int pageSize,

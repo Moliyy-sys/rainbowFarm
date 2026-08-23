@@ -5,6 +5,7 @@ import org.rainbow.farm_common.result.BaseResult;
 import org.rainbow.farm_system.entity.User;
 import org.rainbow.farm_system.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -37,6 +38,7 @@ public class UserController {
      * @return 分页结果
      */
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('/user/list')")
     public BaseResult<IPage<User>> getUserList(
             @RequestParam(value = "pageNum", defaultValue = "1") int pageNum,
             @RequestParam(value = "PageSize", defaultValue = "10") int pageSize,

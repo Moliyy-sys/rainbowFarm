@@ -20,7 +20,12 @@ public enum CodeEnum {
 
     SYS_ROLE_EXIST(603,"角色已存在"),
 
-    SYS_PERMISSION_EXIST(604,"权限已存在");
+    SYS_PERMISSION_EXIST(604,"权限已存在"),
+
+    CAPTCHA_ISNULL(605,"验证码不能为空"),
+
+    CAPTCHA_ERROR(606,"验证码错误")
+    ;
     private final Integer code;
     private final String msg;
 }

@@ -13,12 +13,12 @@ import org.rainbow.farm_system.mapper.PermissionMapper;
 import org.rainbow.farm_system.mapper.RoleMapper;
 import org.rainbow.farm_system.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -30,6 +30,8 @@ public class UserService {
     private RoleMapper roleMapper;
     @Autowired
     private PermissionMapper permissionMapper;
+    @Autowired
+    private PasswordEncoder encoder;
 
     /**
      * 根据id查询用户
@@ -82,6 +84,10 @@ public class UserService {
         if (StringUtils.hasText(user.getPassword())){
             user.setPassword("123456");
         }
+        //密码加密
+        String password = user.getPassword();
+        password = encoder.encode(password);
+        user.setPassword(password);
         //保存用户
         return userMapper.insert(user) > 0;
     }
@@ -101,8 +107,14 @@ public class UserService {
             throw new BusException(CodeEnum.SYS_USER_EXIST);
         }
         user.setUpdateTime(LocalDateTime.now());
+        //如果密码为空,则不加更新密码
         if(!StringUtils.hasText(user.getPassword())){
             user.setPassword(null);
+        }else {
+            //密码加密
+            String password = user.getPassword();
+            password = encoder.encode(password);
+            user.setPassword(password);
         }
         return userMapper.updateById(user)>0;
     }
@@ -207,7 +219,8 @@ public class UserService {
      * @return 权限列表
      */
     public List<Permission> findAllPermission(String userName){
-        return null;
+        return userMapper.selectUserPermissions(userName);
     }
+
 
 }
