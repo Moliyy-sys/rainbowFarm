@@ -17,6 +17,10 @@
     <module>farm_system</module>
     <!-- 启动模块-->
     <module>farm_main</module>
+    <!-- 库存管理模块 -->
+    <module>farm_warehousing</module>
+    <!-- 种植管理模块 -->
+    <module>farm_plant</module>
   </modules>
 
   <properties>
@@ -95,7 +99,6 @@
         <artifactId>mybatis-plus-jsqlparser</artifactId>
         <version>${mybatis-plus.version}</version>
       </dependency>
-
     </dependencies>
   </dependencyManagement>
 </project>

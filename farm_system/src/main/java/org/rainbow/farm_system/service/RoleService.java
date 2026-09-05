@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.rainbow.farm_common.exception.BusException;
 import org.rainbow.farm_common.result.CodeEnum;
+import org.rainbow.farm_common.util.SecurityUtil;
 import org.rainbow.farm_system.entity.Permission;
 import org.rainbow.farm_system.entity.Role;
 import org.rainbow.farm_system.entity.User;
@@ -90,6 +91,15 @@ public class RoleService {
         }
         role.setCreateTime(LocalDateTime.now());
         role.setStatus("0"); // 默认为正常状态
+
+        //添加创建人，创建时间，修改人，修改时间
+        String username = SecurityUtil.getUserName();
+
+        role.setCreateBy(username);
+        role.setUpdateBy(username);
+        role.setCreateTime(LocalDateTime.now());
+        role.setUpdateTime(LocalDateTime.now());
+
         return roleMapper.insert(role) > 0;
     }
 

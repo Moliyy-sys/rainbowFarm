@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.rainbow.farm_common.result.BaseResult;
 import org.rainbow.farm_system.entity.Permission;
 import org.rainbow.farm_system.mapper.PermissionMapper;
+import org.rainbow.farm_system.service.PermissionService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -13,6 +15,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/permission")
 public class PermissionController {
+    @Autowired
+    private PermissionService permissionService;
 
     /**
      * 分页查询权限
@@ -26,7 +30,8 @@ public class PermissionController {
             @RequestParam(value = "pageNum", defaultValue = "1") int pageNum,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @RequestParam(value = "permissionName", required = false) String permissionName) {
-        return null;//BaseResult.success()
+        IPage<Permission> result = permissionService.findPermissionPage(pageNum, pageSize, permissionName);
+        return BaseResult.success(result);
     }
 
     /**
@@ -36,7 +41,8 @@ public class PermissionController {
      */
     @GetMapping("/getPermissionById")
     public BaseResult<Permission> findById(@RequestParam("id") Long id) {
-        return null;
+        Permission permission = permissionService.findById(id);
+        return BaseResult.success(permission);
     }
 
     /**
@@ -45,7 +51,8 @@ public class PermissionController {
      */
     @GetMapping("/all")
     public BaseResult<List<Permission>> getAllPermissions() {
-        return null;
+        List<Permission> permissions = permissionService.findAllPermission();
+        return BaseResult.success(permissions);
     }
 
     /**
@@ -54,7 +61,8 @@ public class PermissionController {
      */
     @GetMapping("/selectList")
     public BaseResult<List<Permission>> selectList() {
-        return null;
+        List<Permission> permissions = permissionService.getPermissionSelectList();
+        return BaseResult.success(permissions);
     }
 
     /**
@@ -64,7 +72,8 @@ public class PermissionController {
      */
     @PostMapping("/addPermission")
     public BaseResult addPermission(@RequestBody Permission permission) {
-        return null;
+        permissionService.addPermission(permission);
+        return BaseResult.success();
     }
 
     /**
@@ -74,7 +83,8 @@ public class PermissionController {
      */
     @PutMapping("/updatePermission")
     public BaseResult updatePermission(@RequestBody Permission permission) {
-        return null;
+        permissionService.updatePermission(permission);
+        return BaseResult.success();
     }
 
     /**
@@ -88,6 +98,8 @@ public class PermissionController {
                 .stream(ids.split(","))
                 .map(Long::parseLong)
                 .collect(Collectors.toList());
-        return null;
+        permissionService.deletePermission(idList);
+        return BaseResult.success();
     }
+
 }

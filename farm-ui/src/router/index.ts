@@ -374,39 +374,39 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 })
 })
 
-// 路由守卫
-// router.beforeEach(async (to, from, next) => {
-//   NProgress.start()
+//路由守卫
+router.beforeEach(async (to, from, next) => {
+  NProgress.start()
   
-//   const userStore = useUserStore()
+  const userStore = useUserStore()
   
-//   if (to.path === '/login') {
-//     if (userStore.isLoggedIn) {
-//       next('/')
-//     } else {
-//       next()
-//     }
-//     return
-//   }
+  if (to.path === '/login') {
+    if (userStore.isLoggedIn) {
+      next('/')
+    } else {
+      next()
+    }
+    return
+  }
   
-//   if (!userStore.isLoggedIn) {
-//     ElMessage.error('请先登录')
-//     next('/login')
-//     return
-//   }
+  if (!userStore.isLoggedIn) {
+    ElMessage.error('请先登录')
+    next('/login')
+    return
+  }
   
-//   // 如果没有用户信息，尝试获取（失败不影响访问）
-//   if (!userStore.userInfo) {
-//     try {
-//       await userStore.fetchUserInfo()
-//     } catch (error) {
-//       console.warn('获取用户信息失败，但允许继续访问:', error)
-//       // 不强制退出，允许用户继续访问
-//     }
-//   }
+  // 如果没有用户信息，尝试获取（失败不影响访问）
+  if (!userStore.userInfo) {
+    try {
+      await userStore.fetchUserInfo()
+    } catch (error) {
+      console.warn('获取用户信息失败，但允许继续访问:', error)
+      // 不强制退出，允许用户继续访问
+    }
+  }
   
-//   next()
-// })
+  next()
+})
 
 router.afterEach(() => {
   NProgress.done()

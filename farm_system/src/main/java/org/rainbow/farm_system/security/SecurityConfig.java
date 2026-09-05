@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -18,6 +18,18 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
     @Autowired
     private CaptchaFilter captchaFilter;
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Autowired
+    private RainbowAccessDeniedHandler rainbowAccessDeniedHandler;
+    @Autowired
+    private RainbowLoginFailureHandler rainbowLoginFailureHandler;
+    @Autowired
+    private RainbowLogoutSuccessHandler rainbowLogoutSuccessHandler;
+    @Autowired
+    private RainbowLoginSuccessHandler rainbowLoginSuccessHandler;
+    @Autowired
+    private RainbowAuthenticationEntryPoint rainbowAuthenticationEntryPoint;
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         //自定义表单目录
         httpSecurity.formLogin(
@@ -25,14 +37,14 @@ public class SecurityConfig {
                     form.usernameParameter("username")//用户名项
                             .passwordParameter("password")//密码项
                             .loginProcessingUrl("/user/login")//登录处理接口
-                            .successHandler(new RainbowLoginSuccessHandler())
-                            .failureHandler(new RainbowLoginFailureHandler());
+                            .successHandler(rainbowLoginSuccessHandler)//登录成功处理
+                            .failureHandler(rainbowLoginFailureHandler);//登录失败处理
                 }
         );
         //权限拦截配置
         httpSecurity.authorizeHttpRequests(
                 resp -> {
-                    resp.requestMatchers("/user/login", "captcha/generate").permitAll();
+                    resp.requestMatchers("/user/login", "/captcha/generate").permitAll();
                     resp.anyRequest().authenticated();//其他接口需要认证
                 }
         );
@@ -40,27 +52,36 @@ public class SecurityConfig {
         httpSecurity.logout(
                 logout -> {
                     logout.logoutUrl("user/logout")//退出登录接口
-                            .logoutSuccessHandler(new RainbowLogoutSuccessHandler())//退出成功处理
-                            .clearAuthentication(true)
-                            .invalidateHttpSession(true);
+                            .logoutSuccessHandler(rainbowLogoutSuccessHandler);//退出成功处理
+                            //.clearAuthentication(true)
+                            //.invalidateHttpSession(true);
                 }
         );
+        //设置session管理策略为无状态
+        httpSecurity.sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS
+                ));
 
         //异常处理配置
         httpSecurity.exceptionHandling(
                 exception -> {
-                    exception.authenticationEntryPoint(new RainbowAuthenticationEntryPoint())//未登录处理
-                            .accessDeniedHandler(new RainbowAccessDeniedHandler());//权限不足处理器
+                    exception.authenticationEntryPoint(rainbowAuthenticationEntryPoint)//未登录处理
+                            .accessDeniedHandler(rainbowAccessDeniedHandler);//权限不足处理器
                 }
         );
         //关闭csrf防护配置
-        httpSecurity.csrf(AbstractHttpConfigurer::disable);
+        httpSecurity.csrf(csrf -> csrf.disable());
         //跨域配置
         httpSecurity.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
-        //添加验证码过滤器
+        /**
+         * 添加验证码过滤器
+         * 添加JWT过滤器
+         */
         httpSecurity.addFilterBefore(captchaFilter, UsernamePasswordAuthenticationFilter.class);
-    return httpSecurity.build();
+        httpSecurity.addFilterBefore(jwtAuthenticationFilter,UsernamePasswordAuthenticationFilter.class);
+
+        return httpSecurity.build();
     }
     //跨域配置对象
     @Bean
@@ -72,7 +93,7 @@ public class SecurityConfig {
         corsConfiguration.setAllowCredentials(false);//不允许cookie跨域
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**",corsConfiguration);//允许所有路径r
+        source.registerCorsConfiguration("/**",corsConfiguration);//允许所有路径
         return source;
     }
 }

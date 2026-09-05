@@ -3,7 +3,7 @@ package org.rainbow.farm_system.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-//import com.itbaizhan.farm_system.log.BusinessType;
+//import org.rainbow.farm_system.log.BusinessType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -7,10 +7,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.rainbow.farm_common.result.BaseResult;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-//未登陆处理器
+@Component
+//未登陆处理类
 public class RainbowAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {

@@ -8,6 +8,8 @@ import org.rainbow.farm_common.result.CodeEnum;
 import org.rainbow.farm_system.entity.Permission;
 import org.rainbow.farm_system.mapper.PermissionMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -16,6 +18,8 @@ import java.util.List;
 /**
  * 后台权限类
  */
+@Service
+@Transactional
 public class PermissionService {
 
     @Autowired
@@ -37,6 +41,17 @@ public class PermissionService {
         queryWrapper.orderByDesc("permission_id");
         return permissionMapper.selectPage(pageObj, queryWrapper);
     }
+
+    /**
+     * 获取所有权限
+     * @return 所有权限列表
+     */
+    public List<Permission> findAllPermission() {
+        QueryWrapper<Permission> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("permission_id");
+        return permissionMapper.selectList(queryWrapper);
+    }
+
 
     /**
      * 根据ID查询权限

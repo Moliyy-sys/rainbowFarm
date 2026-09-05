@@ -15,4 +15,6 @@ public class BusException extends RuntimeException {
     }
     //状态码+错误信息
     private CodeEnum codeEnum;
+
+
 }

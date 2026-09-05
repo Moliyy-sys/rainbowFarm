@@ -28,15 +28,18 @@ public class CaptchaFilter extends OncePerRequestFilter {
                 //获取请求参数
                 String sessionId = request.getSession().getId();
                 String captchaCode = request.getParameter("captchaCode");
-                if (StringUtils.hasText(captchaCode)) {
+
+                if (!StringUtils.hasText(captchaCode)) {
                     throw new BusException(CodeEnum.CAPTCHA_ISNULL);
                 }
                 //从redis中获取验证码
                 String redisKey = "captcha:" + sessionId;
                 String correctCode = redisTemplate.opsForValue().get(redisKey);
+
                 if (correctCode == null || !correctCode.equalsIgnoreCase(captchaCode)) {
                     throw new BusException(CodeEnum.CAPTCHA_ERROR);
                 }
+
             } catch (BusException e) {
                 request.setAttribute("captchaError", e);
                 //手动调用登陆失败处理器

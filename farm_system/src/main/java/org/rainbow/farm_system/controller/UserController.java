@@ -2,6 +2,7 @@ package org.rainbow.farm_system.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.rainbow.farm_common.result.BaseResult;
+import org.rainbow.farm_common.util.SecurityUtil;
 import org.rainbow.farm_system.entity.User;
 import org.rainbow.farm_system.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,4 +117,14 @@ public class UserController {
         boolean result = userService.assignRoles(userId, roleIds);
         return BaseResult.success();
     }
+    /**
+     * 获取当前登录用户名
+     * @return 用户名
+     */
+    @GetMapping("/getUsername")
+    public BaseResult<String> getUsername(){
+        String userName = SecurityUtil.getUserName();
+        return BaseResult.success(userName);
+    }
+
 }

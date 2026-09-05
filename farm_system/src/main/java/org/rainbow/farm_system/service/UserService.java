@@ -222,5 +222,78 @@ public class UserService {
         return userMapper.selectUserPermissions(userName);
     }
 
+    /**
+     * 根据用户名修改当前登录用户的个人信息
+     * @param user 用户信息
+     * @return 修改结果
+     */
+    public boolean updateCurrentUserInfo(User user){
+        // 根据用户名查询当前用户
+        User currentUser = findByUserName(user.getUserName());
+        if (currentUser == null){
+            throw new BusException(CodeEnum.PERSONAL_USER_NOT_FOUND);
+        }
+
+        // 修改数据
+        if (user.getNickName() != null){
+            currentUser.setNickName(user.getNickName());
+        }
+        if (user.getPhonenumber() != null){
+            currentUser.setPhonenumber(user.getPhonenumber());
+        }
+        if (user.getEmail() != null){
+            currentUser.setEmail(user.getEmail());
+        }
+        if (user.getSex() != null){
+            currentUser.setSex(user.getSex());
+        }
+        currentUser.setUpdateBy(user.getUserName());
+        currentUser.setUpdateTime(LocalDateTime.now());
+
+        // 执行更新
+        return userMapper.updateById(currentUser) > 0;
+    }
+
+
+    /**
+     * 修改当前登录用户的密码
+     * @param currentPassword 当前密码
+     * @param newPassword 新密码
+     * @param confirmPassword 确认密码
+     * @param currentUserName 当前用户名
+     * @return 修改结果
+     */
+    public boolean updateCurrentUserPassword(
+            String currentPassword,
+            String newPassword,
+            String confirmPassword,
+            String currentUserName){
+        // 参数校验
+        if (!StringUtils.hasText(currentPassword) || !StringUtils.hasText(newPassword)){
+            throw new BusException(CodeEnum.PERSONAL_PASSWORD_EMPTY);
+        }
+        if (!newPassword.equals(confirmPassword)){
+            throw new BusException(CodeEnum.PERSONAL_PASSWORD_NOT_MATCH);
+        }
+
+        // 根据用户名查询用户信息
+        User user = findByUserName(currentUserName);
+        if (user == null){
+            throw new BusException(CodeEnum.PERSONAL_USER_NOT_FOUND);
+        }
+
+        // 验证当前密码是否正确
+        if (!encoder.matches(currentPassword,user.getPassword())){
+            throw new BusException(CodeEnum.PERSONAL_PASSWORD_ERROR);
+        }
+        // 更新密码
+        String encodeNewPassword = encoder.encode(newPassword);
+        user.setPassword(encodeNewPassword);
+        user.setPwdUpdateDate(LocalDateTime.now());
+        user.setUpdateBy(currentUserName);
+        user.setUpdateTime(LocalDateTime.now());
+
+        return userMapper.updateById(user) > 0;
+    }
 
 }

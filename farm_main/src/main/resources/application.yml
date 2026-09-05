@@ -10,10 +10,6 @@ logging:
     console: '%d{HH:mm:ss.SSS} %clr(%-5level) ---  [%-15thread] %cyan(%-50logger{50}):%msg%n'
 
 spring:
-  security:
-    user:
-      name: admin          # 自定义用户名
-      password: 123456
   application:
     name: farm_main # 模块名
   # 数据源
